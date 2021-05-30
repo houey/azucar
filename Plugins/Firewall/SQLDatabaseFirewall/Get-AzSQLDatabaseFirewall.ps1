@@ -36,12 +36,15 @@
         #Import Localized data
         $LocalizedDataParams = $AzureObject.LocalizedDataParams
         Import-LocalizedData @LocalizedDataParams;
+        #Import Global vars
+        $LogPath = $AzureObject.LogPath
+        Set-Variable LogPath -Value $LogPath -Scope Global
     }
     Process{
         $PluginName = $AzureObject.PluginName
         $AzureSQLConfig = $AzureObject.AzureConfig.AzureSQLDatabases
         $Section = $AzureObject.AzureSection
-        Write-AzucarMessage -WriteLog $WriteLog -Message ($message.AzucarADGeneralTaskMessage -f "Database Firewall", $bgRunspaceID, $PluginName, $AzureObject.TenantID) `
+        Write-AzucarMessage -WriteLog $WriteLog -Message ($message.AzucarADGeneralTaskMessage -f "SQL Database Firewall", $bgRunspaceID, $PluginName, $AzureObject.TenantID) `
                                 -Plugin $PluginName -IsHost -Color Green
         #Retrieve instance
         $Instance = $AzureObject.Instance
@@ -60,7 +63,7 @@
                     Write-AzucarMessage -WriteLog $WriteLog -Message ("Searching for firewall rules in {0}..." -f $Server.name) `
                                         -Plugin $PluginName -Verbosity $Verbosity -IsVerbose
             
-                    $uri = ("{0}{1}/{2}?api-version={3}" -f $Instance.ResourceManager, $server.id, "firewallrules", "2014-04-01-preview")
+                    $uri = ("{0}{1}/{2}?api-version={3}" -f $Instance.ResourceManager, $server.id, "firewallrules", "2014-04-01")
                     #Get database info
                     $FWRules = Get-AzSecRMObject -OwnQuery $uri -Manual -Authentication $RMAuth -Verbosity $Verbosity -WriteLog $WriteLog
                     if($FWRules.properties){
@@ -94,11 +97,11 @@
             $DBFWRules | Add-Member -type NoteProperty -name Data -value $AllFWRules
             #Add data to object
             if($DBFWRules){
-                $ReturnPluginObject | Add-Member -type NoteProperty -name DatabaseFirewall -value $DBFWRules
+                $ReturnPluginObject | Add-Member -type NoteProperty -name azure_sql_database_firewall -value $DBFWRules
             }
         }
         else{
-            Write-AzucarMessage -WriteLog $WriteLog -Message ($message.AzureADGeneralQueryEmptyMessage -f "Database Firewall Rule", $AzureObject.TenantID) `
+            Write-AzucarMessage -WriteLog $WriteLog -Message ($message.AzureADGeneralQueryEmptyMessage -f "SQL Database Firewall Rule", $AzureObject.TenantID) `
                                 -Plugin $PluginName -Verbosity $Verbosity -IsWarning
         }
     }
